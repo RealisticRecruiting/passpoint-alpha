@@ -1,7 +1,10 @@
-// app/api/uploadthing/route.ts
-import { createRouteHandler } from "uploadthing/next";
-import { ourFileRouter } from "../../utils/uploadthing"; // adjust as needed
+// pages/api/uploadthing.ts
+import { createNextPageApiHandler } from "uploadthing/next-legacy";
+import { ourFileRouter } from "../../utils/uploadthing";
 
-export const { GET, POST } = createRouteHandler({
+
+const handler = createNextPageApiHandler({
   router: ourFileRouter,
 });
+
+export default handler;
