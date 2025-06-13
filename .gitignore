@@ -4,4 +4,11 @@ node_modules/
 .env
 .env.local
 .env.production
+# secrets
+.env
+.env.local
+.env.*.local
+
+# build output
+.next/
 
