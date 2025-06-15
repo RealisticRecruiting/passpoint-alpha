@@ -23,7 +23,7 @@ export default function JobPage() {
     supabase
       .from("jobs")
       .select("*")
-      .eq("job_id", jobId)
+      .eq("job_id", Number(jobId))
       .then(({ data }) => {
         console.log("Final match:", data);
         setJob(data?.[0] || null);
