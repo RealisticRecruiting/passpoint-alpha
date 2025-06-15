@@ -1,1 +1,9 @@
-{}
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/jobs/[jobId]": "pages/jobs/[jobId].js",
+  "/api/evaluate": "pages/api/evaluate.js",
+  "/feedback": "pages/feedback.js",
+  "/": "pages/index.js"
+}
