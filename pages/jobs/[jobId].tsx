@@ -21,13 +21,14 @@ export default function JobPage() {
     if (!router.isReady || !jobId) return;
 
     supabase
-      .from("jobs")
-      .select("*")
-      .eq("job_id", Number(jobId))
-      .then(({ data }) => {
-        console.log("Final match:", data);
-        setJob(data?.[0] || null);
-      });
+  .from("jobs")
+  .select("*")
+  .ilike("job_id", `${jobId}`) // makes it case-insensitive
+  .then(({ data }) => {
+    console.log("Final match:", data);
+    setJob(data?.[0] || null);
+  });
+
   }, [router.isReady, jobId]);
 
   return (
