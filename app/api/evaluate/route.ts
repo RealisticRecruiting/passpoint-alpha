@@ -44,6 +44,8 @@ export async function POST(req: Request) {
       .eq("job_id", jobId)
       .single();
 
+      console.log("📦 Supabase job fetch result:", { data, error });
+
     if (error || !data) {
       console.error("Supabase job fetch error:", error);
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -156,9 +158,9 @@ ${resume}
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
     });
-
+console.log("📦 GPT full completion object:", completion);
     const fullResponse = completion.choices?.[0]?.message?.content || "";
-
+console.log("📤 GPT extracted content:", fullResponse);
     console.log("=== GPT RESPONSE START ===");
     console.log(fullResponse);
     console.log("=== GPT RESPONSE END ===");
