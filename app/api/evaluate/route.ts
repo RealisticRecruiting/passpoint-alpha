@@ -1,51 +1,41 @@
-
-
-// @ts-nocheck
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
-console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-console.log("Service Role Key:", process.env.SUPABASE_SERVICE_ROLE_KEY);
-import mammoth from "mammoth";
-import pdfParse from "pdf-parse";
-import fetch from "node-fetch";
-console.log("Incoming request:", await request.json());
-console.log("Summary:", summary);
-console.log("Feedback:", feedback);
+import parsePdf from "@/lib/pdfParser";
+
+// Init OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
+// Init Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function extractTextFromFile(url: string): Promise<string> {
-  const response = await fetch(url);
-  const buffer = await response.arrayBuffer();
-  const contentType = response.headers.get("content-type");
-
-  if (contentType?.includes("pdf")) {
-    const data = await pdfParse(Buffer.from(buffer));
-    return data.text;
-  } else if (
-    contentType?.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-  ) {
-    const result = await mammoth.extractRawText({ buffer: Buffer.from(buffer) });
-    return result.value;
+// Extract text from PDF using pdfjs-dist
+async function extractTextFromFile(fileUrl: string): Promise<string> {
+  const response = await fetch(fileUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file from URL: ${fileUrl}`);
   }
 
-  throw new Error("Unsupported file type");
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  return await parsePdf(buffer);
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  const { fileUrl, jobId } = req.body;
-  if (!fileUrl || !jobId) return res.status(400).json({ error: "Missing required parameters" });
-
+// POST handler
+export async function POST(req: Request) {
   try {
+    const { fileUrl, jobId } = await req.json();
+
+    if (!fileUrl || !jobId) {
+      return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+    }
+
     const resume = await extractTextFromFile(fileUrl);
 
     const { data, error } = await supabase
@@ -56,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error || !data) {
       console.error("Supabase job fetch error:", error);
-      return res.status(404).json({ error: "Job not found" });
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
     const prompt = `
@@ -168,23 +158,21 @@ ${resume}
     });
 
     const fullResponse = completion.choices?.[0]?.message?.content || "";
-console.log("=== GPT RESPONSE START ===");
-console.log(fullResponse);
-console.log("=== GPT RESPONSE END ===");
+
+    console.log("=== GPT RESPONSE START ===");
+    console.log(fullResponse);
+    console.log("=== GPT RESPONSE END ===");
 
     let summary = "Mixed Match";
-if (/Strong Match/i.test(fullResponse)) {
-  summary = "Strong Match";
-} else if (/Unlikely to Proceed/i.test(fullResponse)) {
-  summary = "Unlikely to Proceed";
-}
+    if (/Strong Match/i.test(fullResponse)) {
+      summary = "Strong Match";
+    } else if (/Unlikely to Proceed/i.test(fullResponse)) {
+      summary = "Unlikely to Proceed";
+    }
 
-
-    return res.status(200).json({ feedback: fullResponse, summary });
-  } catch (err: any) {
+    return NextResponse.json({ feedback: fullResponse, summary });
+  } catch (err) {
     console.error("Evaluation error:", err);
-    return res.status(500).json({ error: "Failed to generate feedback" });
+    return NextResponse.json({ error: "Failed to generate feedback" }, { status: 500 });
   }
-  
-
 }
