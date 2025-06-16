@@ -23,7 +23,7 @@ export default function JobPage() {
     supabase
   .from("jobs")
   .select("*")
-  .ilike("job_id", `${jobId}`) // makes it case-insensitive
+  .ilike("job_id", `${jobId}`) 
   .then(({ data }) => {
     console.log("Final match:", data);
     setJob(data?.[0] || null);
