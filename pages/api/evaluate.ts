@@ -1,3 +1,5 @@
+
+
 // @ts-nocheck
 import type { NextApiRequest, NextApiResponse } from "next";
 import { OpenAI } from "openai";
@@ -7,7 +9,9 @@ console.log("Service Role Key:", process.env.SUPABASE_SERVICE_ROLE_KEY);
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse";
 import fetch from "node-fetch";
-
+console.log("Incoming request:", await request.json());
+console.log("Summary:", summary);
+console.log("Feedback:", feedback);
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
@@ -169,8 +173,12 @@ console.log(fullResponse);
 console.log("=== GPT RESPONSE END ===");
 
     let summary = "Mixed Match";
-    if (/Strong Match/i.test(fullResponse)) summary = "Strong Match";
-    if (/Unlikely to Proceed/i.test(fullResponse)) summary = "Unlikely to Proceed";
+if (/Strong Match/i.test(fullResponse)) {
+  summary = "Strong Match";
+} else if (/Unlikely to Proceed/i.test(fullResponse)) {
+  summary = "Unlikely to Proceed";
+}
+
 
     return res.status(200).json({ feedback: fullResponse, summary });
   } catch (err: any) {
