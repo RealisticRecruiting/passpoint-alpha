@@ -39,10 +39,11 @@ export async function POST(req: Request) {
     const resume = await extractTextFromFile(fileUrl);
 
     const { data, error } = await supabase
-      .from("jobs")
-      .select("title, must_have_skills, nice_to_have_skills")
-      .eq("job_id", jobId)
-      .single();
+  .from("jobs")
+  .select("title, must_have_skills, nice_to_have_skills")
+  .filter("job_id", "ilike", jobId)
+  .single();
+
 
       console.log("📦 Supabase job fetch result:", { data, error });
 
