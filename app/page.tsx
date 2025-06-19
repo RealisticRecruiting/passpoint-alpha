@@ -1,5 +1,5 @@
 // app/page.tsx
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
@@ -32,27 +32,31 @@ export default async function Home() {
         </section>
 
         <section className="mb-16">
-          <h2 className="text-2xl font-semibold mb-4 text-[#153f4d]">How It Works</h2>
-          <ol className="space-y-3 text-[#0b0604]">
-            <li><strong>1.</strong> Pick a job from the list below</li>
-            <li><strong>2.</strong> Upload your resume</li>
-            <li><strong>3.</strong> Get instant AI-powered feedback</li>
+          <h2 className="text-2xl font-semibold mb-4 text-[#153f4d]">
+            How It Works
+          </h2>
+          <ol className="space-y-2 list-decimal list-inside text-base text-[#0b0604]">
+            <li>Pick a job from the list below</li>
+            <li>Upload your resume</li>
+            <li>Get instant AI-powered feedback</li>
           </ol>
         </section>
 
         <section id="job-list">
-          <h2 className="text-2xl font-semibold mb-4 text-[#153f4d]">Open Roles to Try</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-[#153f4d]">
+            Open Roles to Try
+          </h2>
           {jobs && jobs.length > 0 ? (
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {jobs.map((job) => (
                 <li
                   key={job.job_id}
-                  className="bg-white shadow-md p-4 rounded-lg border border-[#fcb33d]"
+                  className="bg-white shadow p-4 rounded-lg border border-[#fcb33d]"
                 >
                   <h3 className="text-lg font-bold mb-2">{job.title}</h3>
                   <Link
                     className="text-[#14a5c6] hover:underline"
-                    href={`/jobs/${job.job_id}`}
+                    href={`/jobs/${job.job_id.toLowerCase()}`}
                   >
                     Try This Job
                   </Link>
