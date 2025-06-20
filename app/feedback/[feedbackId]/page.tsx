@@ -11,7 +11,7 @@ async function fetchFeedback(feedbackId: string) {
   const { data, error } = await supabase
     .from("feedback")
     .select("feedback_id, full_feedback, summary, job_id")
-    .eq("id", feedbackId)
+    .eq("feedback_id", feedbackId)
     .single();
 
   if (error || !data) {
@@ -60,7 +60,9 @@ async function FeedbackContent({ feedbackId }: { feedbackId: string }) {
   }
 
   // Build back-to-job link with fallback to /jobs if no job_id
-  const backLink = feedbackData.job_id ? `/jobs/${feedbackData.job_id}` : "/jobs";
+  console.log("Back link job_id:", feedbackData.job_id);
+const backLink = feedbackData.job_id ? `/jobs/${feedbackData.job_id}` : "/jobs";
+
 
   return (
     <div className="p-6 prose max-w-3xl mx-auto">
