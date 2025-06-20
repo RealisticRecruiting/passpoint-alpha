@@ -163,10 +163,32 @@ ${resume}
     console.log("GPT Response:", fullResponse);
 
     let summary = "Mixed Match";
-    if (/Strong Match/i.test(fullResponse)) summary = "Strong Match";
-    else if (/Unlikely to Proceed/i.test(fullResponse)) summary = "Unlikely to Proceed";
+if (/Strong Match/i.test(fullResponse)) {
+  summary = "Strong Match";
+} else if (/Unlikely to Proceed/i.test(fullResponse)) {
+  summary = "Unlikely to Proceed";
+}
 
-    return NextResponse.json({ feedback: fullResponse, summary });
+// Save feedback and summary to Supabase
+const { data: insertedFeedback, error: insertError } = await supabase
+  .from('feedback')
+  .insert({
+    full_feedback: fullResponse,
+    summary,
+    job_id: jobId,
+    created_at: new Date().toISOString(),
+  })
+  .select()
+  .single();
+
+if (insertError) {
+  console.error("Failed to save feedback:", insertError);
+  // You can still return feedback even if saving fails
+  return NextResponse.json({ feedback: fullResponse, summary });
+}
+
+return NextResponse.json({ feedback: fullResponse, summary, feedbackId: insertedFeedback.id });
+
   } catch (err) {
     console.error("Evaluation error:", err);
     return NextResponse.json({ error: "Failed to generate feedback" }, { status: 500 });
