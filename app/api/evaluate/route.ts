@@ -3,7 +3,8 @@
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
-import parsePdf from "@/lib/pdfParser";
+import parsePdf from '@/lib/pdfParser';
+
 
 // Init OpenAI
 const openai = new OpenAI({
