@@ -1,23 +1,33 @@
 import { createClient } from "@supabase/supabase-js";
-import UploadForm from "@/components/UploadForm"; // adjust if named export
+import UploadForm from "@/components/UploadForm"; // default import
+import { use } from "react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function JobPage({ params }: { params: { jobId: string } }) {
-  const { jobId } = params;
+type Job = {
+  job_url: string;
+};
 
-  const { data: job, error } = await supabase
+async function getJob(jobId: string): Promise<Job | null> {
+  const { data, error } = await supabase
     .from("jobs")
     .select("job_url")
     .eq("job_id", jobId)
     .single();
 
-  if (error || !job?.job_url) {
+  if (error || !data) return null;
+  return data;
+}
+
+export default async function JobPage({ params }: { params: { jobId: string } }) {
+  const job = await getJob(params.jobId);
+
+  if (!job?.job_url) {
     return (
       <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
         <h1>Job Not Found</h1>
@@ -27,13 +37,16 @@ export default async function JobPage({ params }: { params: { jobId: string } })
   }
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <UploadForm jobId={jobId} />
-      <p>
-        <a href={job.job_url} target="_blank" rel="noopener noreferrer">
-          View full job posting &rarr;
-        </a>
-      </p>
+    <div style={{ maxWidth: 900, margin: "2rem auto", fontFamily: "sans-serif" }}>
+      {/* Upload Button */}
+      <UploadForm jobId={params.jobId} />
+
+      {/* iframe with the job posting */}
+      <iframe
+        src={job.job_url}
+        style={{ width: "100%", height: "600px", border: "1px solid #ccc", marginTop: "1rem" }}
+        title="Job Posting"
+      />
     </div>
   );
 }
