@@ -16,13 +16,15 @@ export const UploadForm = ({ jobId }: { jobId: string }) => {
             alert("Upload failed. No file returned.");
             return;
           }
-console.log("Uploading resume with URL:", res[0].url);
-console.log("For jobId:", jobId);
+console.log("📤 Upload complete. File URL:", res[0].url);
+console.log("📌 Job ID being submitted for evaluation:", jobId);
+
 
           const response = await fetch("/api/evaluate", {
             method: "POST",
             body: JSON.stringify({
-              resumeUrl: res[0].url,
+              fileUrl: res[0].url,
+
               jobId,
             }),
             headers: {

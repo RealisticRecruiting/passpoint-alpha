@@ -1,5 +1,6 @@
 // app/api/evaluate/route.ts
 
+
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
@@ -26,7 +27,13 @@ async function extractTextFromFile(fileUrl: string): Promise<string> {
 
 export async function POST(req: Request) {
   try {
-    const { fileUrl, jobId } = await req.json();
+    // DEBUG: log raw body for troubleshooting
+    const rawBody = await req.text();
+    console.log("📥 Incoming raw request body:", rawBody);
+
+    // Re-parse JSON from raw body
+    const { fileUrl, jobId } = JSON.parse(rawBody);
+
 
     if (!fileUrl || !jobId) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
