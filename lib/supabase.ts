@@ -8,14 +8,11 @@ const supabase = createClient(
 export async function getJobById(jobId: string) {
   const { data, error } = await supabase
     .from('jobs')
-    .select('job_url')
+    .select('job_url, title') // <-- include title
     .eq('job_id', jobId.toLowerCase())
     .single();
 
-  if (error) {
-    console.error('Supabase error:', error);
-    return null;
-  }
-
+  if (error || !data) return null;
   return data;
 }
+
