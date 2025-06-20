@@ -1,51 +1,82 @@
-"use client";
+import Link from "next/link";
+import { Suspense } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-import { UploadButton } from "@uploadthing/react";
-import { useRouter } from "next/navigation";
-import type { OurFileRouter } from "@/lib/core";
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export const UploadForm = ({ jobId }: { jobId: string }) => {
-  const router = useRouter();
+async function fetchFeedback(feedbackId: string) {
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("id, full_feedback, summary, job_id")
+    .eq("id", feedbackId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Feedback not found for ID: ${feedbackId}`);
+  }
+
+  return data;
+}
+
+export default async function FeedbackPage({ params }: { params: { feedbackId: string } }) {
+  const { feedbackId } = params;
 
   return (
-    <div className="my-6">
-      <UploadButton<OurFileRouter, "resumeUploader">
-  endpoint="resumeUploader"
-        onClientUploadComplete={async (res) => {
-          if (!res || res.length === 0) {
-            alert("Upload failed. No file returned.");
-            return;
-          }
-console.log("📤 Upload complete. File URL:", res[0].url);
-console.log("📌 Job ID being submitted for evaluation:", jobId);
+    <Suspense fallback={<div className="p-6 text-gray-700">Loading feedback...</div>}>
+      <FeedbackContent feedbackId={feedbackId} />
+    </Suspense>
+  );
+}
 
+async function FeedbackContent({ feedbackId }: { feedbackId: string }) {
+  let feedbackData;
+  try {
+    feedbackData = await fetchFeedback(feedbackId);
+  } catch (err: any) {
+    return (
+      <div className="p-6 text-red-600">
+        Error loading feedback: {err.message || "Unknown error"}
+        <br />
+        <Link href="/jobs" className="underline text-blue-600 hover:text-blue-800 mt-4 block">
+          &larr; Back to Jobs
+        </Link>
+      </div>
+    );
+  }
 
-          const response = await fetch("/api/evaluate", {
-            method: "POST",
-            body: JSON.stringify({
-              fileUrl: res[0].url,
+  if (!feedbackData?.full_feedback) {
+    return (
+      <div className="p-6 text-red-600">
+        No feedback found.
+        <br />
+        <Link href="/jobs" className="underline text-blue-600 hover:text-blue-800 mt-4 block">
+          &larr; Back to Jobs
+        </Link>
+      </div>
+    );
+  }
 
-              jobId,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+  // Build back-to-job link with fallback to /jobs if no job_id
+  const backLink = feedbackData.job_id ? `/jobs/${feedbackData.job_id}` : "/jobs";
 
-          if (!response.ok) {
-            alert("There was an error scoring your resume.");
-            return;
-          }
+  return (
+    <div className="p-6 prose max-w-3xl mx-auto">
+      <h1>Resume Feedback</h1>
 
-          const result = await response.json();
-          const feedbackId = result.feedbackId;
+      <pre className="whitespace-pre-wrap bg-gray-100 p-4 rounded">{feedbackData.full_feedback}</pre>
 
-          router.push(`/feedback/${feedbackId}`);
-        }}
-        onUploadError={(error: Error) => {
-          alert(`Upload failed: ${error.message}`);
-        }}
-      />
+      {feedbackData.summary && (
+        <p className="mt-4 font-semibold">
+          <strong>Summary of Fit:</strong> {feedbackData.summary}
+        </p>
+      )}
+
+      <Link href={backLink} className="underline text-blue-600 hover:text-blue-800 mt-8 block">
+        &larr; Back to Job
+      </Link>
     </div>
   );
-};
+}

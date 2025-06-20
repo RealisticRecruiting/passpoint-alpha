@@ -59,6 +59,9 @@ async function FeedbackContent({ feedbackId }: { feedbackId: string }) {
     );
   }
 
+  // Build back-to-job link with fallback to /jobs if no job_id
+  const backLink = feedbackData.job_id ? `/jobs/${feedbackData.job_id}` : "/jobs";
+
   return (
     <div className="p-6 prose max-w-3xl mx-auto">
       <h1>Resume Feedback</h1>
@@ -71,8 +74,8 @@ async function FeedbackContent({ feedbackId }: { feedbackId: string }) {
         </p>
       )}
 
-      <Link href="/jobs" className="underline text-blue-600 hover:text-blue-800 mt-8 block">
-        &larr; Back to Jobs
+      <Link href={backLink} className="underline text-blue-600 hover:text-blue-800 mt-8 block">
+        &larr; Back to Job
       </Link>
     </div>
   );

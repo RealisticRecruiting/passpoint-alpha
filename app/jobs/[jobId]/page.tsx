@@ -1,39 +1,30 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
-// TEMP: Forcing git to recognize change
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 export const dynamic = 'force-dynamic';
 
-import { getJobById } from '@/lib/supabase';
-import { UploadForm } from '@/components/UploadForm';
-
 export default async function JobPage({ params }: { params: { jobId: string } }) {
-  const job = await getJobById(params.jobId);
+  const { jobId } = params;
 
-  if (!job || !job.job_url) {
+  const { data: job, error } = await supabase
+    .from("jobs")
+    .select("job_url")
+    .eq("job_id", jobId)
+    .single();
+
+  if (error || !job?.job_url) {
     return (
-      <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+      <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
         <h1>Job Not Found</h1>
         <p>This job either doesn't exist or is missing a redirect link.</p>
       </div>
     );
   }
 
-  return (
-    <main className="bg-[#f0efec] min-h-screen px-6 py-12 text-[#0b0604]">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-[#153f4d]">{job.title || 'Untitled Role'}</h1>
-        <UploadForm jobId={params.jobId} />
-
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold mb-2 text-[#153f4d]">Job Description</h2>
-          <iframe
-            src={job.job_url}
-            width="100%"
-            height="800"
-            className="border border-gray-300 rounded"
-            title="Job Description"
-          />
-        </section>
-      </div>
-    </main>
-  );
+  redirect(job.job_url);
 }
