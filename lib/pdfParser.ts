@@ -43,6 +43,9 @@ export default function parsePdf(buffer: Buffer): Promise<string> {
         reject(err);
       }
     });
+console.log("📄 Buffer length:", buffer.length);
+console.log("📄 Buffer first 30 bytes (utf-8):", buffer.slice(0, 30).toString("utf-8"));
+console.log("📄 Buffer first 30 bytes (hex):", buffer.slice(0, 30).toString("hex"));
 
     pdfParser.parseBuffer(buffer);
   });

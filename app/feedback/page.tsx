@@ -10,35 +10,27 @@ const supabase = createClient(
 export const dynamic = 'force-dynamic';
 
 export default async function FeedbackPage() {
-  const { data, error } = await supabase.from("feedback").select("id").limit(20);
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("feedback_id, summary, job_id")
+    .limit(20);
 
   if (error) {
-    return (
-      <div className="p-6 text-red-600">
-        Failed to load feedback list: {error.message}
-      </div>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <div className="p-6">
-        No feedback entries found.
-      </div>
-    );
+    // handle error, e.g. throw or return an error UI
+    throw new Error("Failed to load feedback list");
   }
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="mb-4 text-2xl font-bold">Feedback List</h1>
       <ul className="list-disc pl-5 space-y-2">
-        {data.map(({ id }) => (
-          <li key={id}>
+        {data.map(({ feedback_id, summary }) => (
+          <li key={feedback_id}>
             <Link
-              href={`/feedback/${id}`}
+              href={`/feedback/${feedback_id}`}
               className="text-blue-600 underline hover:text-blue-800"
             >
-              Feedback ID: {id}
+              Feedback Summary: {summary || feedback_id}
             </Link>
           </li>
         ))}

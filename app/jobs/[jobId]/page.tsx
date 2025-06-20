@@ -37,7 +37,7 @@ export default async function JobPage({ params }: { params: { jobId: string } })
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "2rem auto", fontFamily: "sans-serif" }}>
+    <div style={{ maxWidth: 1200, margin: "2rem auto", fontFamily: "sans-serif" }}>
       {/* Upload Button */}
       <UploadForm jobId={params.jobId} />
 

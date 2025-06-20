@@ -14,11 +14,14 @@ const supabase = createClient(
 
 async function extractTextFromFile(fileUrl: string): Promise<string> {
   const response = await fetch(fileUrl);
+  console.log("📡 Fetch status:", response.status);
+console.log("📡 Fetch content-type:", response.headers.get("content-type"));
   if (!response.ok) {
     throw new Error(`Failed to fetch file from URL: ${fileUrl}`);
   }
   const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+const uint8Array = new Uint8Array(arrayBuffer);
+const buffer = Buffer.from(uint8Array);
   const parsedText = await parsePdf(buffer);
   console.log("📝 Extracted resume text (first 500 chars):", parsedText.slice(0, 500));
   return parsedText;

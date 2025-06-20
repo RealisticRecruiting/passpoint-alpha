@@ -10,7 +10,7 @@ const supabase = createClient(
 async function fetchFeedback(feedbackId: string) {
   const { data, error } = await supabase
     .from("feedback")
-    .select("id, full_feedback, summary, job_id")
+    .select("feedback_id, full_feedback, summary, job_id")
     .eq("id", feedbackId)
     .single();
 
