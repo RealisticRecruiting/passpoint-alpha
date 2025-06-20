@@ -1,1 +1,6 @@
-// PostCSS config placeholder
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}

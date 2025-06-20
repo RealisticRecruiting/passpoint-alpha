@@ -9,8 +9,8 @@ export default function ThankYouPage() {
       <p className="text-lg mb-4">
         Your resume has been submitted for review. If you meet the criteria, you'll be contacted soon.
       </p>
-      <Link href="/">
-        <a className="text-blue-500 underline">Return to Job Listings</a>
+      <Link href="/" className="text-blue-500 underline">
+        Return to Job Listings
       </Link>
     </div>
   );

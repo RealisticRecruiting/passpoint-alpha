@@ -1,3 +1,5 @@
+// app/api/evaluate/route.ts
+
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
@@ -14,7 +16,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Extract text from PDF using pdfjs-dist
+// Extract text from PDF
 async function extractTextFromFile(fileUrl: string): Promise<string> {
   const response = await fetch(fileUrl);
   if (!response.ok) {
@@ -24,7 +26,14 @@ async function extractTextFromFile(fileUrl: string): Promise<string> {
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  return await parsePdf(buffer);
+  try {
+    const parsedText = await parsePdf(buffer);
+    console.log("📝 Extracted resume text (first 500 chars):", parsedText.slice(0, 500));
+    return parsedText;
+  } catch (err) {
+    console.error("❌ PDF parsing failed:", err);
+    throw err;
+  }
 }
 
 // POST handler
@@ -39,16 +48,14 @@ export async function POST(req: Request) {
     const resume = await extractTextFromFile(fileUrl);
 
     const { data, error } = await supabase
-  .from("jobs")
-  .select("title, must_have_skills, nice_to_have_skills")
-  .filter("job_id", "ilike", jobId)
-  .single();
+      .from("jobs")
+      .select("title, must_have_skills, nice_to_have_skills")
+      .filter("job_id", "ilike", jobId)
+      .single();
 
-
-      console.log("📦 Supabase job fetch result:", { data, error });
+    console.log("📦 Supabase job fetch result:", { data, error });
 
     if (error || !data) {
-      console.error("Supabase job fetch error:", error);
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
@@ -159,12 +166,9 @@ ${resume}
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
     });
-console.log("📦 GPT full completion object:", completion);
+
     const fullResponse = completion.choices?.[0]?.message?.content || "";
-console.log("📤 GPT extracted content:", fullResponse);
-    console.log("=== GPT RESPONSE START ===");
-    console.log(fullResponse);
-    console.log("=== GPT RESPONSE END ===");
+    console.log("📤 GPT extracted content:", fullResponse);
 
     let summary = "Mixed Match";
     if (/Strong Match/i.test(fullResponse)) {

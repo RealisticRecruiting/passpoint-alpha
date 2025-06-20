@@ -5,16 +5,18 @@ export default function parsePdf(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
 
-    pdfParser.on("pdfParser_dataError", errData => reject(errData.parserError));
-    pdfParser.on("pdfParser_dataReady", pdfData => {
-      const rawText = pdfData?.formImage?.Pages?.map(page =>
-        page.Texts?.map(text =>
-          decodeURIComponent(text.R.map(r => r.T).join(""))
-        ).join(" ")
-      ).join("\n\n");
+    pdfParser.on("pdfParser_dataError", (errData: any) => reject(errData.parserError));
 
-      resolve(rawText || "");
-    });
+pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
+  const rawText = pdfData?.formImage?.Pages?.map((page: any) =>
+    page.Texts?.map((text: any) =>
+      decodeURIComponent(text.R?.map((r: any) => r.T).join("") ?? "")
+    ).join(" ")
+  ).join("\n");
+
+  resolve(rawText);
+});
+
 
     pdfParser.parseBuffer(buffer);
   });

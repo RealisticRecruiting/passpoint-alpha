@@ -1,3 +1,5 @@
+'use client';
+
 import { UploadButton } from "@uploadthing/react";
 import type { OurFileRouter } from "@/utils/uploadthing";
 
@@ -7,7 +9,7 @@ type UploadFormProps = {
 
 export function UploadForm({ jobId }: UploadFormProps) {
   return (
-    <UploadButton<OurFileRouter>
+    <UploadButton<OurFileRouter, "resumeUploader">
       endpoint="resumeUploader"
       onClientUploadComplete={(res) => {
         console.log("Upload complete!", res, "for job:", jobId);
