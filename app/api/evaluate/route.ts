@@ -3,41 +3,27 @@
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { createClient } from "@supabase/supabase-js";
-import parsePdf from '@/lib/pdfParser';
+import parsePdf from "@/lib/pdfParser";
 
-
-// Init OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// Init Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Extract text from PDF
 async function extractTextFromFile(fileUrl: string): Promise<string> {
   const response = await fetch(fileUrl);
   if (!response.ok) {
     throw new Error(`Failed to fetch file from URL: ${fileUrl}`);
   }
-
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-
-  try {
-    const parsedText = await parsePdf(buffer);
-    console.log("📝 Extracted resume text (first 500 chars):", parsedText.slice(0, 500));
-    return parsedText;
-  } catch (err) {
-    console.error("❌ PDF parsing failed:", err);
-    throw err;
-  }
+  return await parsePdf(buffer);
 }
 
-// POST handler
 export async function POST(req: Request) {
   try {
     const { fileUrl, jobId } = await req.json();
@@ -53,8 +39,6 @@ export async function POST(req: Request) {
       .select("title, must_have_skills, nice_to_have_skills")
       .filter("job_id", "ilike", jobId)
       .single();
-
-    console.log("📦 Supabase job fetch result:", { data, error });
 
     if (error || !data) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
@@ -169,14 +153,11 @@ ${resume}
     });
 
     const fullResponse = completion.choices?.[0]?.message?.content || "";
-    console.log("📤 GPT extracted content:", fullResponse);
+    console.log("GPT Response:", fullResponse);
 
     let summary = "Mixed Match";
-    if (/Strong Match/i.test(fullResponse)) {
-      summary = "Strong Match";
-    } else if (/Unlikely to Proceed/i.test(fullResponse)) {
-      summary = "Unlikely to Proceed";
-    }
+    if (/Strong Match/i.test(fullResponse)) summary = "Strong Match";
+    else if (/Unlikely to Proceed/i.test(fullResponse)) summary = "Unlikely to Proceed";
 
     return NextResponse.json({ feedback: fullResponse, summary });
   } catch (err) {
