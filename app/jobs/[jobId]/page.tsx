@@ -1,14 +1,18 @@
-// app/jobs/[jobId]/page.tsx
 import { createClient } from "@supabase/supabase-js";
 import { UploadForm } from "@/components/UploadForm";
-
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default async function JobPage({ params }: { params: { jobId: string } }) {
+type JobPageProps = {
+  params: {
+    jobId: string;
+  };
+};
+
+export default async function JobPage({ params }: JobPageProps) {
   const { data, error } = await supabase
     .from("jobs")
     .select("title, description")
