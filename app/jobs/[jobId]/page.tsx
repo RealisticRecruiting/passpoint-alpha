@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import UploadForm from "@/components/UploadForm"; // adjust if named export
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,5 +26,14 @@ export default async function JobPage({ params }: { params: { jobId: string } })
     );
   }
 
-  redirect(job.job_url);
+  return (
+    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <UploadForm jobId={jobId} />
+      <p>
+        <a href={job.job_url} target="_blank" rel="noopener noreferrer">
+          View full job posting &rarr;
+        </a>
+      </p>
+    </div>
+  );
 }
