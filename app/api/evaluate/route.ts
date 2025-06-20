@@ -187,7 +187,7 @@ ${resume}
       return NextResponse.json({ feedback: fullResponse, summary });
     }
 
-    return NextResponse.json({ feedback: fullResponse, summary, feedbackId: insertedFeedback.id });
+    return NextResponse.json({ feedback: fullResponse, summary, feedbackId: insertedFeedback.feedback_id });
   } catch (err) {
     console.error("Evaluation error:", err);
     return NextResponse.json({ error: "Failed to generate feedback" }, { status: 500 });

@@ -38,6 +38,8 @@ export default function UploadForm({ jobId }: { jobId: string }) {
             }
 
             const result = await response.json();
+            console.log("API evaluate response:", result);
+
             const feedbackId = result.feedbackId;
 
             console.log("📝 Received feedback ID:", feedbackId);

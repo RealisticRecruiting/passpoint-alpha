@@ -23,6 +23,7 @@ async function fetchFeedback(feedbackId: string) {
 
 export default async function FeedbackPage({ params }: { params: { feedbackId: string } }) {
   const { feedbackId } = params;
+  console.log("Feedback page received feedbackId:", feedbackId); // <-- add this line
 
   return (
     <Suspense fallback={<div className="p-6 text-gray-700">Loading feedback...</div>}>
@@ -30,6 +31,7 @@ export default async function FeedbackPage({ params }: { params: { feedbackId: s
     </Suspense>
   );
 }
+
 
 async function FeedbackContent({ feedbackId }: { feedbackId: string }) {
   let feedbackData;

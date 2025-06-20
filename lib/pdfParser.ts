@@ -12,37 +12,39 @@ export default function parsePdf(buffer: Buffer): Promise<string> {
 
     pdfParser.on("pdfParser_dataReady", (pdfData: any) => {
       try {
-        if (!pdfData?.formImage?.Pages) {
+        // Detect whether formImage is present or not
+        const pages = pdfData.formImage?.Pages || pdfData.Pages;
+
+        if (!pages) {
           console.warn("⚠️ No pages found in PDF data");
           resolve("");
           return;
         }
 
-        // Extract text per page, preserving word boundaries
-        const pagesText = pdfData.formImage.Pages.map((page: any) => {
-          return page.Texts
-            .map((text: any) => {
-              // Decode each text chunk (array of R)
-              const decoded = text.R
-                .map((r: any) => {
-                  try {
-                    return decodeURIComponent(r.T);
-                  } catch (e) {
-                    console.warn("⚠️ decodeURIComponent failed for string:", r.T, e);
-                    return "";
-                  }
-                })
-                .join("");
-              return decoded;
-            })
-            .join(" "); // Join text chunks of a page with space to keep words together
-        });
+        console.log(`📄 PDF contains ${pages.length} page(s)`);
 
-        const fullText = pagesText.join("\n"); // Join pages with newline
+        // Extract raw text strings from pages
+        const rawStrings = pages.flatMap((page: any) =>
+          page.Texts.flatMap((text: any) =>
+            text.R.map((r: any) => r.T)
+          )
+        );
 
-        console.log("📝 Extracted text sample (first 500 chars):", fullText.slice(0, 500));
+        console.log("📝 Raw extracted strings sample:", rawStrings.slice(0, 10));
 
-        resolve(fullText);
+        // Decode URI components safely
+        const decoded = rawStrings.map((str: string) => {
+          try {
+            return decodeURIComponent(str);
+          } catch (e) {
+            console.warn("⚠️ decodeURIComponent failed for string:", str, e);
+            return "";
+          }
+        }).join(" ");
+
+        console.log("📝 Decoded text sample (first 500 chars):", decoded.slice(0, 500));
+
+        resolve(decoded);
       } catch (err) {
         console.error("❌ Unexpected error during PDF data processing:", err);
         reject(err);
