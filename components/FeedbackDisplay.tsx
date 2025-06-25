@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import {
   Card,
   CardHeader,
@@ -30,7 +28,36 @@ type Feedback = {
   niceToHave: Requirement[];
   jobId: string;
   takeaways: string[];
+  feedbackId: string;
 };
+
+async function handleActionClick(feedbackId: string, actionType: string)
+ {
+  console.log("➡️ handleActionClick called with:", feedbackId, actionType);
+
+  if (!feedbackId) {
+    console.error("❌ Missing feedbackId, can't log action");
+    return;
+  }
+
+  try {
+  const res = await fetch("/api/log-action", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ feedbackId, actionType }),
+  });
+
+  const data = await res.json();
+  console.log("🔁 Log Action Response:", data);
+
+  if (!res.ok) {
+    console.error("❌ API call failed:", data.error || res.statusText);
+  }
+} catch (err) {
+  console.error("❌ Fetch threw an error:", err);
+}
+
+}
 
 export default function FeedbackDisplay({ feedback }: { feedback: Feedback }) {
   const fitScoreColors = {
@@ -45,48 +72,25 @@ export default function FeedbackDisplay({ feedback }: { feedback: Feedback }) {
     high: "High likelihood of next steps",
   };
 
-  const nextStepButtons = {
-    high: (
-      <Button asChild>
-        <Link href={`/jobs/${feedback.jobId}`} className="w-full text-center">
-          Apply to the Job!
-        </Link>
-      </Button>
-    ),
-    medium: (
-      <div className="flex gap-4">
-        <Button
-          variant="outline"
-          onClick={() => alert("Feature coming soon: Resume update & re-check")}
-          className="flex-1"
-        >
-          Update Resume & Check Again
-        </Button>
-        <Button asChild variant="secondary" className="flex-1">
-          <Link href={`/jobs/${feedback.jobId}`}>Apply Anyway</Link>
-        </Button>
-      </div>
-    ),
-    low: (
-      <Button asChild variant="destructive" className="w-full">
-        <Link href="/resources">Explore Better Matches</Link>
-      </Button>
-    ),
-  };
-
   return (
     <div className="max-w-3xl mx-auto p-6 font-sans">
-      {/* Header */}
+      {!feedback.feedbackId && (
+        <div className="text-red-600 font-bold mb-4">
+          ⚠️ Feedback ID is missing — actions won’t work
+        </div>
+      )}
+
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-3xl font-bold">Application Feedback</CardTitle>
         </CardHeader>
+
         <CardContent>
           <p className="mb-4 text-gray-700">
             PassPoint analyzes your resume against the job requirements, focusing on demonstrated skills rather than simple keyword matching.
           </p>
 
-          {/* Fit Score Bar */}
+          {/* Fit Score */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-1">
               <span className="font-semibold">Fit Score:</span>
@@ -113,20 +117,17 @@ export default function FeedbackDisplay({ feedback }: { feedback: Feedback }) {
             </p>
           </div>
 
-          {/* Summary */}
-        <div className="mb-6 p-4 bg-blue-50 rounded border border-blue-200">
-  <h2 className="text-lg font-semibold mb-2">Top Takeaways</h2>
-  <ul className="list-disc pl-5 space-y-1 text-gray-800">
-    {feedback.takeaways.map((tip, idx) => (
-      <li key={idx}>{tip}</li>
-    ))}
-  </ul>
-</div>
+          {/* Takeaways */}
+          <div className="mb-6 p-4 bg-blue-50 rounded border border-blue-200">
+            <h2 className="text-lg font-semibold mb-2">Top Takeaways</h2>
+            <ul className="list-disc pl-5 space-y-1 text-gray-800">
+              {feedback.takeaways.map((tip, idx) => (
+                <li key={idx}>{tip}</li>
+              ))}
+            </ul>
+          </div>
 
-
-
-
-          {/* Requirements Checklists */}
+          {/* Requirements */}
           <Accordion type="multiple">
             <AccordionItem value="mustHave">
               <AccordionTrigger>
@@ -164,11 +165,46 @@ export default function FeedbackDisplay({ feedback }: { feedback: Feedback }) {
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+
+          {/* Centered, spaced buttons */}
+          <div className="flex flex-wrap gap-4 mt-8 justify-center">
+
+  <button
+  className="px-5 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm font-medium border"
+  onClick={async () => {
+    await handleActionClick(feedback.feedbackId, "update_resume");
+    window.location.href = `/jobs/${feedback.jobId}?mode=upload`;
+  }}
+>
+  Update Resume & Check Again
+</button>
+
+<button
+  className="px-5 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+  onClick={() => {
+    handleActionClick(feedback.feedbackId, "apply");
+    window.location.href = `/jobs/${feedback.jobId}`;
+  }}
+>
+  Apply To The Job
+</button>
+
+  <button
+  className="px-5 py-2 rounded bg-red-100 hover:bg-red-200 text-red-800 text-sm font-medium border"
+  onClick={() => {
+    handleActionClick(feedback.feedbackId, "exit");
+    window.location.href = "/resources";
+  }}
+>
+  Exit Without Applying
+</button>
+
+
+
+</div>
+
         </CardContent>
       </Card>
-
-      {/* Next Steps Button(s) */}
-      <div>{nextStepButtons[feedback.fitScore]}</div>
     </div>
   );
 }

@@ -22,13 +22,15 @@ async function extractTextFromFile(fileUrl: string): Promise<string> {
   const buffer = Buffer.from(uint8Array);
   return await parsePdf(buffer);
 }
-console.log("🔍 /api/evaluate POST hit");
+
 
 export async function POST(req: Request) {
   
   try {
     const rawBody = await req.text();
-    const { fileUrl, jobId } = JSON.parse(rawBody);
+    console.log("🛠️ Incoming request body:", rawBody);
+const { fileUrl, jobId } = JSON.parse(rawBody);
+console.log("🧾 Parsed body:", { fileUrl, jobId });
 
     if (!fileUrl || !jobId) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
