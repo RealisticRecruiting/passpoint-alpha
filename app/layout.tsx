@@ -1,5 +1,6 @@
 // app/layout.tsx
 import { ReactNode } from "react";
+import "@/styles/globals.css";
 
 export const metadata = {
   title: "PassPoint",

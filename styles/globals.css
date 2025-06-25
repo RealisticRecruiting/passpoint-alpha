@@ -1,1 +1,14 @@
+/* styles/globals.css */
+
 /* Tailwind base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* You can add simple global styles here if needed */
+body {
+  /* example */
+  background-color: white;
+  color: black;
+  font-family: system-ui, sans-serif;
+}

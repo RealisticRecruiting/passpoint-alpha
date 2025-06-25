@@ -1,86 +1,57 @@
-import Link from "next/link";
 import { Suspense } from "react";
-import { createClient } from "@supabase/supabase-js";
+import FeedbackContent from "@/components/FeedbackDisplay";
+import { fetchFeedback } from "@/lib/fetchFeedback";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
-async function fetchFeedback(feedbackId: string) {
-  const { data, error } = await supabase
-    .from("feedback")
-    .select("feedback_id, full_feedback, summary, job_id")
-    .eq("feedback_id", feedbackId)
-    .single();
-
-  if (error || !data) {
-    throw new Error(`Feedback not found for ID: ${feedbackId}`);
-  }
-
-  return data;
-}
-
-export default async function FeedbackPage({ params }: { params: { feedbackId: string } }) {
+export default async function FeedbackPage({
+  params,
+}: {
+  params: { feedbackId: string };
+}) {
   const { feedbackId } = params;
-  console.log("Feedback page received feedbackId:", feedbackId); // <-- add this line
 
-  return (
-    <Suspense fallback={<div className="p-6 text-gray-700">Loading feedback...</div>}>
-      <FeedbackContent feedbackId={feedbackId} />
-    </Suspense>
-  );
-}
+  const feedbackData = await fetchFeedback(feedbackId);
 
-
-async function FeedbackContent({ feedbackId }: { feedbackId: string }) {
-  let feedbackData;
-  try {
-    feedbackData = await fetchFeedback(feedbackId);
-  } catch (err: any) {
-    return (
-      <div className="p-6 text-red-600">
-        Error loading feedback: {err.message || "Unknown error"}
-        <br />
-        <Link href="/jobs" className="underline text-blue-600 hover:text-blue-800 mt-4 block">
-          &larr; Back to Jobs
-        </Link>
-      </div>
-    );
+  if (!feedbackData) {
+    return <div className="p-6 text-red-600">Feedback not found.</div>;
   }
 
-  if (!feedbackData?.full_feedback) {
-    return (
-      <div className="p-6 text-red-600">
-        No feedback found.
-        <br />
-        <Link href="/jobs" className="underline text-blue-600 hover:text-blue-800 mt-4 block">
-          &larr; Back to Jobs
-        </Link>
-      </div>
-    );
-  }
+  const fitScore =
+    feedbackData.summary === "Strong Match"
+      ? "high"
+      : feedbackData.summary === "Mixed Match"
+      ? "medium"
+      : "low";
 
-  // Build back-to-job link with fallback to /jobs if no job_id
-  console.log("Back link job_id:", feedbackData.job_id);
-const backLink = feedbackData.job_id ? `/jobs/${feedbackData.job_id}` : "/jobs";
+  const transformSection = (obj: Record<string, string>) =>
+  Object.entries(obj).map(([skill, reason]) => {
+    let status: "✅" | "⚠️" | "❌" = "❌"; // default to ❌
+    if (reason.startsWith("✅")) status = "✅";
+    else if (reason.startsWith("⚠️")) status = "⚠️";
+    return {
+      skill,
+      reason,
+      status,
+    };
+  });
 
+
+  const mustHave = transformSection(feedbackData.mustHaves);
+  const niceToHave = transformSection(feedbackData.niceToHaves);
 
   return (
-    <div className="p-6 prose max-w-3xl mx-auto">
-      <h1>Resume Feedback</h1>
-
-      <pre className="whitespace-pre-wrap bg-gray-100 p-4 rounded">{feedbackData.full_feedback}</pre>
-
-      {feedbackData.summary && (
-        <p className="mt-4 font-semibold">
-          <strong>Summary of Fit:</strong> {feedbackData.summary}
-        </p>
-      )}
-
-      <Link href={backLink} className="underline text-blue-600 hover:text-blue-800 mt-8 block">
-        &larr; Back to Job
-      </Link>
-    </div>
-  );
+  <Suspense fallback={<div className="p-6 text-gray-700">Loading feedback...</div>}>
+    <FeedbackContent
+      feedback={{
+        fitScore,
+        summary: feedbackData.summary,
+ // use actual summary, not takeaways.join
+        mustHave,
+        niceToHave,
+        jobId: feedbackData.jobId,
+        takeaways: feedbackData.takeaways, // ← this was missing
+      }}
+    />
+  </Suspense>
+);
 }

@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import UploadForm from "@/components/UploadForm"; // default import
-import { use } from "react";
+import UploadForm from "@/components/UploadForm";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,7 +24,10 @@ async function getJob(jobId: string): Promise<Job | null> {
 }
 
 export default async function JobPage({ params }: { params: { jobId: string } }) {
-  const job = await getJob(params.jobId);
+  const { jobId } = params;
+
+  const job = await getJob(jobId.toLowerCase());
+
 
   if (!job?.job_url) {
     return (
@@ -38,10 +40,7 @@ export default async function JobPage({ params }: { params: { jobId: string } })
 
   return (
     <div style={{ maxWidth: 1200, margin: "2rem auto", fontFamily: "sans-serif" }}>
-      {/* Upload Button */}
-      <UploadForm jobId={params.jobId} />
-
-      {/* iframe with the job posting */}
+      <UploadForm jobId={jobId} />
       <iframe
         src={job.job_url}
         style={{ width: "100%", height: "600px", border: "1px solid #ccc", marginTop: "1rem" }}
